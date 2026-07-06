@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 
 from config.config import Settings, get_settings
+from evaluation.compare import compare_models
 from evaluation.evaluate import evaluate as evaluate_dataset
 from evaluation.logger import write_trace
 from llm.base import LLMError
@@ -17,6 +18,14 @@ from tools.search_tool import SearchTool
 
 app = typer.Typer(help="Vanilla ReAct baseline using a local Ollama model.")
 console = Console()
+
+
+def parse_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def parse_int_csv(value: str) -> list[int]:
+    return [int(item.strip()) for item in value.split(",") if item.strip()]
 
 
 def build_agent(settings: Settings) -> ReActAgent:
@@ -130,6 +139,67 @@ def evaluate_command(
         table.add_row(name, f"{value:.4f}" if isinstance(value, float) else str(value))
     console.print(table)
     console.print(f"[dim]Saved results to {settings.output_path}[/dim]")
+
+
+@app.command("compare-models")
+def compare_models_command(
+    dataset_path: Path = typer.Option(..., help="Dataset JSON path."),
+    output_path: Path = typer.Option(Path("results/model_comparison.txt"), help="Comparison TXT output path."),
+    models: str = typer.Option(..., help="Comma-separated Ollama model names."),
+    sample_sizes: str = typer.Option("20,50,100", help="Comma-separated n values, e.g. 20,50,100."),
+    dataset_name: str = typer.Option("HotpotQA", help="Dataset display name for the comparison table."),
+    corpus_path: Path | None = typer.Option(None, help="Path to local JSON corpus."),
+    max_iterations: int | None = typer.Option(3, min=1, help="Maximum ReAct iterations."),
+    max_parse_retries: int | None = typer.Option(1, min=0, help="Malformed-response retry count."),
+    max_output_tokens: int | None = typer.Option(1024, min=32, help="Maximum generated tokens per LLM call."),
+    ollama_timeout: float | None = typer.Option(300.0, min=1.0, help="Ollama request timeout in seconds."),
+) -> None:
+    settings = get_settings()
+    settings.dataset_path = dataset_path
+    settings.output_path = output_path
+    if corpus_path is not None:
+        settings.corpus_path = corpus_path
+    if max_iterations is not None:
+        settings.max_iterations = max_iterations
+    if max_parse_retries is not None:
+        settings.max_parse_retries = max_parse_retries
+    if max_output_tokens is not None:
+        settings.max_output_tokens = max_output_tokens
+    if ollama_timeout is not None:
+        settings.ollama_timeout = ollama_timeout
+
+    model_names = parse_csv(models)
+    n_values = parse_int_csv(sample_sizes)
+    if not model_names:
+        raise typer.BadParameter("At least one model must be provided.")
+    if not n_values:
+        raise typer.BadParameter("At least one sample size must be provided.")
+
+    try:
+        payload = compare_models(
+            agent_factory=build_agent,
+            settings=settings,
+            dataset_path=dataset_path,
+            output_path=output_path,
+            models=model_names,
+            sample_sizes=n_values,
+            dataset_name=dataset_name,
+        )
+    except LLMError as exc:
+        console.print(f"[bold red]Could not complete the LLM call.[/bold red] {exc}")
+        console.print(
+            "[dim]For Colab/free GPU, start with --sample-sizes 20 and two models before larger runs.[/dim]"
+        )
+        raise typer.Exit(code=1) from exc
+
+    table = Table(title=f"Model Comparison: {dataset_name}")
+    for column in payload["columns"]:
+        table.add_column(column)
+    for row in payload["runs"]:
+        table.add_row(*(row[column] for column in payload["columns"]))
+    console.print(table)
+    console.print(f"[dim]Saved TXT table to {output_path}[/dim]")
+    console.print(f"[dim]Saved detailed JSON to {output_path.with_suffix('.json')}[/dim]")
 
 
 if __name__ == "__main__":

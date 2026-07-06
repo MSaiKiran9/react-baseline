@@ -138,6 +138,27 @@ uv run python main.py evaluate --dataset-path datasets/sample.json --output-path
 
 For every sample, the evaluator stores the prediction, expected answer, latency, iterations, and full reasoning trajectory. It also computes accuracy, precision, recall, F1, average latency, and average iterations.
 
+## Compare Models
+
+Run the same dataset across multiple Ollama models and sample sizes:
+
+```bash
+uv run python main.py compare-models \
+  --dataset-name HotpotQA \
+  --dataset-path datasets/sample.json \
+  --corpus-path datasets/corpus.json \
+  --models qwen3:8b,mistral:7b \
+  --sample-sizes 20,50,100 \
+  --output-path results/model_comparison_hotpotqa.txt
+```
+
+The command writes:
+
+- `results/model_comparison_hotpotqa.txt`: professor-friendly comparison table
+- `results/model_comparison_hotpotqa.json`: detailed per-question traces and metrics
+
+The table keeps future research columns such as `Sem F1`, `MAR`, `MKG Matches / n`, `Accuracy Improvement`, and `Sem F1 Change`. For the vanilla ReAct baseline, these are reported as `N/A`.
+
 ## Reasoning Loop
 
 The model is instructed to emit:
