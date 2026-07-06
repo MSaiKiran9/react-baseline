@@ -1,0 +1,12 @@
+[
+  {
+    "id": "react-paper",
+    "title": "ReAct Paper",
+    "text": "ReAct, short for Reason and Act, prompts language models to generate reasoning traces and task-specific actions in an interleaved manner."
+  },
+  {
+    "id": "baseline-scope",
+    "title": "Baseline Scope",
+    "text": "This repository implements vanilla ReAct with a local Ollama model and excludes memory, reflection, planning modules, embeddings, vector databases, RAG, and external agent frameworks."
+  }
+]
