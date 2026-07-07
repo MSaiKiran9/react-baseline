@@ -1,3 +1,4 @@
+import ollama
 import json
 import time
 from dataclasses import dataclass
@@ -72,6 +73,7 @@ def compare_models(
     system_name: str = "ReAct Baseline",
 ) -> dict[str, object]:
     dataset = load_dataset(dataset_path)
+    client = ollama.Client(host=settings.ollama_url)
     runs: list[ComparisonRun] = []
     detailed_results: list[dict[str, object]] = []
 
@@ -83,6 +85,27 @@ def compare_models(
             )
 
         for model in models:
+            # Unload any previously loaded models
+            try:
+                running = client.ps()
+
+                # Handle both dict and object return types
+                models_loaded = running.get("models", []) if isinstance(running, dict) else running.models
+
+                for m in models_loaded:
+                    name = m["name"] if isinstance(m, dict) else m.model
+
+                    try:
+                        client.generate(
+                            model=name,
+                            prompt="",
+                            keep_alive=0,
+                        )
+                    except Exception:
+                        pass
+
+            except Exception:
+                pass
             settings.model_name = model
             agent = agent_factory(settings)
             run_results = _evaluate_samples(agent, samples)
