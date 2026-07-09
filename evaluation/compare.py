@@ -8,6 +8,7 @@ from config.config import Settings
 from evaluation.dataset import DatasetSample, load_dataset
 from evaluation.metrics import aggregate, exact_match, token_scores
 from react.agent import ReActAgent
+from openpyxl import Workbook
 
 
 COMPARISON_COLUMNS = [
@@ -125,17 +126,29 @@ def compare_models(
                 )
             )
             detailed_results.append(
-                {
-                    "model": model,
-                    "dataset": dataset_name,
-                    "system": system_name,
-                    "sample_size": sample_size,
-                    "metrics": metrics.__dict__,
-                    "retrieval_failures": retrieval_failures,
-                    "reasoning_failures": reasoning_failures,
-                    "results": run_results,
-                }
-            )
+    {
+        "model": model,
+        "dataset": dataset_name,
+        "system": system_name,
+        "sample_size": sample_size,
+        "metrics": metrics.__dict__,
+        "retrieval_failures": retrieval_failures,
+        "reasoning_failures": reasoning_failures,
+    }
+)
+            # detailed_results.append(
+            #     {
+            #         "model": model,
+            #         "dataset": dataset_name,
+            #         "system": system_name,
+            #         "sample_size": sample_size,
+            #         "metrics": metrics.__dict__,
+            #         "retrieval_failures": retrieval_failures,
+            #         "reasoning_failures": reasoning_failures,
+            #         "results": run_results,
+            #     }
+            # )
+            
 
     payload = {
         "columns": COMPARISON_COLUMNS,
@@ -144,6 +157,7 @@ def compare_models(
     }
     _write_outputs(payload, output_path)
     return payload
+    
 
 
 def _evaluate_samples(agent: ReActAgent, samples: list[DatasetSample]) -> list[dict[str, object]]:
@@ -192,11 +206,45 @@ def _classify_failures(results: list[dict[str, object]]) -> tuple[int, int]:
     return retrieval_failures, reasoning_failures
 
 
+# def _write_outputs(payload: dict[str, object], output_path: Path) -> None:
+#     output_path.parent.mkdir(parents=True, exist_ok=True)
+#     output_path.write_text(format_comparison_table(payload["runs"]), encoding="utf-8")
+#     json_path = output_path.with_suffix(".json")
+#     json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
 def _write_outputs(payload: dict[str, object], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(format_comparison_table(payload["runs"]), encoding="utf-8")
-    json_path = output_path.with_suffix(".json")
-    json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    # TXT table
+    output_path.write_text(
+        format_comparison_table(payload["runs"]),
+        encoding="utf-8",
+    )
+
+    # Excel summary
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Model Comparison"
+
+    # Header
+    sheet.append(COMPARISON_COLUMNS)
+
+    # Rows
+    for row in payload["runs"]:
+        sheet.append([row[col] for col in COMPARISON_COLUMNS])
+
+    workbook.save(output_path.with_suffix(".xlsx"))
+
+    # Optional JSON (only summary)
+    summary = {
+        "columns": payload["columns"],
+        "runs": payload["runs"],
+    }
+
+    output_path.with_suffix(".json").write_text(
+        json.dumps(summary, indent=2),
+        encoding="utf-8",
+    )
 
 
 def format_comparison_table(rows: object) -> str:
