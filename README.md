@@ -152,12 +152,38 @@ uv run python main.py compare-models \
   --output-path results/model_comparison_hotpotqa.txt
 ```
 
-The command writes:
+The command creates a timestamped experiment folder under `results/`, for example:
 
-- `results/model_comparison_hotpotqa.txt`: professor-friendly comparison table
-- `results/model_comparison_hotpotqa.json`: detailed per-question traces and metrics
+```text
+results/model_comparison_hotpotqa_20260709T120000Z/
+  comparison.xlsx
+  comparison.csv
+  comparison.json
+  comparison.txt
+  graphs/
+    accuracy.png
+    precision.png
+    recall.png
+    token_f1.png
+    latency.png
+    iterations.png
+    retrieval_failures.png
+    reasoning_failures.png
+  logs/
+    traces/
+      one JSON trace per evaluated question
+```
+
+`comparison.xlsx` has two publication-ready sheets:
+
+- `Model comparison`: aggregate model metrics
+- `Per-question evaluation`: question, prediction, expected answer, exact match, token metrics, latency, iterations, and trace path
+
+The summary JSON is intentionally lightweight and does not embed full trajectories. Full reasoning trajectories are stored separately under `logs/traces/`.
 
 The table keeps future research columns such as `Sem F1`, `MAR`, `MKG Matches / n`, `Accuracy Improvement`, and `Sem F1 Change`. For the vanilla ReAct baseline, these are reported as `N/A`.
+
+The retrieval layer uses cached corpus loading and cached BM25 indexes so repeated model comparisons do not rebuild the same corpus structures for every run.
 
 ## Reasoning Loop
 

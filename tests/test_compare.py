@@ -1,4 +1,4 @@
-from evaluation.compare import format_comparison_table
+﻿from evaluation.compare import format_comparison_table
 
 
 def test_format_comparison_table_contains_future_columns() -> None:
@@ -10,16 +10,18 @@ def test_format_comparison_table_contains_future_columns() -> None:
                 "System": "ReAct Baseline",
                 "n": "20",
                 "Accuracy": "0.500",
-                "Sem F1": "N/A",
+                "Precision": "0.600",
+                "Recall": "0.700",
                 "Token F1": "0.400",
+                "Sem F1": "N/A",
                 "MAR": "N/A",
                 "MKG Matches / n": "N/A",
                 "Retrieval Failures": "2",
                 "Reasoning Failures": "1",
                 "Accuracy Improvement": "N/A",
                 "Sem F1 Change": "N/A",
-                "Avg Latency": "4.00s",
-                "Avg Iterations": "2.00",
+                "Average Latency": "4.00",
+                "Average Iterations": "2.00",
                 "Notes": "baseline",
             }
         ]
@@ -27,4 +29,5 @@ def test_format_comparison_table_contains_future_columns() -> None:
 
     assert "MKG Matches / n" in table
     assert "Sem F1" in table
+    assert "Precision" in table
     assert "qwen3:8b" in table

@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 from react.agent import PromptBuilder
 from tools.base import BaseTool, Observation
@@ -19,5 +19,5 @@ def test_prompt_builder_includes_question_and_tools() -> None:
     assert "What is ReAct?" in messages[0].content
     assert "Search things." in messages[0].content
     assert "Current date:" in messages[0].content
-    assert "take a Search action before using Finish" in messages[0].content
+    assert "Finish must contain only the answer phrase" in messages[0].content
     assert "Finish:" in messages[0].content

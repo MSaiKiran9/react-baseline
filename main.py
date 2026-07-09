@@ -1,4 +1,4 @@
-import time
+﻿import time
 from pathlib import Path
 
 import typer
@@ -198,9 +198,9 @@ def compare_models_command(
     for row in payload["runs"]:
         table.add_row(*(row[column] for column in payload["columns"]))
     console.print(table)
-    console.print(f"[dim]Saved TXT table to {output_path}[/dim]")
-    console.print(f"[dim]Saved detailed JSON to {output_path.with_suffix('.json')}[/dim]")
+    console.print(f"[dim]Saved experiment outputs to {payload['experiment_dir']}[/dim]")
 
 
 if __name__ == "__main__":
     app()
+
