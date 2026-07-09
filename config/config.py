@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     model_name: str = Field(default="qwen3:8b", alias="MODEL_NAME")
     temperature: float = Field(default=0.0, alias="TEMPERATURE")
     top_p: float = Field(default=1.0, alias="TOP_P")
-    max_output_tokens: int = Field(default=1024, alias="MAX_OUTPUT_TOKENS")
+    max_output_tokens: int = Field(default=512, alias="MAX_OUTPUT_TOKENS")
     max_iterations: int = Field(default=8, alias="MAX_ITERATIONS")
     max_parse_retries: int = Field(default=1, alias="MAX_PARSE_RETRIES")
     dataset_path: Path = Field(default=Path("datasets/sample.json"), alias="DATASET_PATH")

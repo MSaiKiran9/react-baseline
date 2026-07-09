@@ -11,7 +11,7 @@ class SearchTool(BaseTool):
     name = "Search"
     description = "Search the local corpus using BM25 ranking."
 
-    def __init__(self, corpus_path: Path, max_results: int = 10):
+    def __init__(self, corpus_path: Path, max_results: int = 3):
         self.max_results = max_results
         self.documents = load_corpus(corpus_path)
 
